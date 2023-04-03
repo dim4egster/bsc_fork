@@ -1018,9 +1018,6 @@ func (p *Parlia) getCurrentValidators(blockHash common.Hash, blockNumber *big.In
 
 	// method
 	method := "getValidators"
-	if p.chainConfig.IsEuler(blockNumber) {
-		method = "getMiningValidators"
-	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel when we are finished consuming integers
@@ -1113,21 +1110,21 @@ func (p *Parlia) initContract(state *state.StateDB, header *types.Header, chain 
 	txs *[]*types.Transaction, receipts *[]*types.Receipt, receivedTxs *[]*types.Transaction, usedGas *uint64, mining bool) error {
 	// method
 	method := "init"
-	// contracts
-	contracts := []string{
-		systemcontracts.ValidatorContract,
-		systemcontracts.SlashContract,
-		systemcontracts.LightClientContract,
-		systemcontracts.RelayerHubContract,
-		systemcontracts.TokenHubContract,
-		systemcontracts.RelayerIncentivizeContract,
-		systemcontracts.CrossChainContract,
-	}
 	// get packed data
 	data, err := p.validatorSetABI.Pack(method)
 	if err != nil {
 		log.Error("Unable to pack tx for init validator set", "error", err)
 		return err
+	}
+	contracts := []string{
+		systemcontracts.ValidatorContract,
+		systemcontracts.SlashContract,
+		systemcontracts.SystemRewardContract,
+		systemcontracts.StakingPoolContract,
+		systemcontracts.GovernanceContract,
+		systemcontracts.ChainConfigContract,
+		systemcontracts.RuntimeUpgradeContract,
+		systemcontracts.DeployerProxyContract,
 	}
 	for _, c := range contracts {
 		msg := p.getSystemMessage(header.Coinbase, common.HexToAddress(c), data, common.Big0)
