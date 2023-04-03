@@ -676,6 +676,12 @@ func (p *Parlia) Finalize(chain consensus.ChainHeaderReader, header *types.Heade
 			copy(validatorsBytes[i*validatorBytesLength:], validator.Bytes())
 		}
 
+		var newValidatorsString []string
+		for _, validator := range newValidators {
+			newValidatorsString = append(newValidatorsString, validator.Hex())
+		}
+		log.Info("Updating validator set", "validator", strings.Join(newValidatorsString, ","))
+
 		extraSuffix := len(header.Extra) - extraSeal
 		if !bytes.Equal(header.Extra[extraVanity:extraSuffix], validatorsBytes) {
 			return errMismatchingEpochValidators
