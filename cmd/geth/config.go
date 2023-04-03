@@ -18,8 +18,11 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/config"
+	"github.com/ethereum/go-ethereum/core"
 	"math/big"
 	"os"
 	"reflect"
@@ -116,6 +119,33 @@ func defaultNodeConfig() node.Config {
 	return cfg
 }
 
+func readGenesisConfig(ctx *cli.Context) *core.Genesis {
+	// RTF just return already stored genesis config
+	if ctx.GlobalBool(utils.RTFTestnetFlag.Name) {
+		return config.RTFTestnetGenesisConfig
+	}
+	// RTF just return already stored genesis config
+	if ctx.GlobalBool(utils.RTFMainnetFlag.Name) {
+		return config.RTFMainnetGenesisConfig
+	}
+	// Make sure we have a valid genesis JSON
+	genesisPath := ctx.GlobalString(utils.GenesisFlag.Name)
+	if len(genesisPath) == 0 {
+		utils.Fatalf("Must supply path to genesis JSON file")
+	}
+	file, err := os.Open(genesisPath)
+	if err != nil {
+		utils.Fatalf("Failed to read genesis file: %v", err)
+	}
+	//goland:noinspection GoUnhandledErrorResult
+	defer file.Close()
+	genesis := new(core.Genesis)
+	if err := json.NewDecoder(file).Decode(genesis); err != nil {
+		utils.Fatalf("invalid genesis file: %v", err)
+	}
+	return genesis
+}
+
 // makeConfigNode loads geth configuration and creates a blank node instance.
 func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
 	// Load defaults.
@@ -131,6 +161,9 @@ func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
 			utils.Fatalf("%v", err)
 		}
 	}
+
+	// Load genesis injection
+	cfg.Eth.Genesis = readGenesisConfig(ctx)
 
 	// Apply flags.
 	utils.SetNodeConfig(ctx, &cfg.Node)

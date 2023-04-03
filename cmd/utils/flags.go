@@ -111,6 +111,11 @@ func printHelp(out io.Writer, templ string, data interface{}) {
 // are the same for all commands.
 
 var (
+	// Genesis settings
+	GenesisFlag = cli.StringFlag{
+		Name:  "genesis",
+		Usage: "Path to genesis JSON file",
+	}
 	// General settings
 	DataDirFlag = DirectoryFlag{
 		Name:  "datadir",
@@ -179,6 +184,14 @@ var (
 	MainnetFlag = cli.BoolFlag{
 		Name:  "mainnet",
 		Usage: "Ethereum mainnet",
+	}
+	RTFMainnetFlag = cli.BoolFlag{
+		Name:  "rtfmainnet",
+		Usage: "Ready To Fight mainnet network",
+	}
+	RTFTestnetFlag = cli.BoolFlag{
+		Name:  "rtftestnet",
+		Usage: "Ready To Fight testnet",
 	}
 	DeveloperFlag = cli.BoolFlag{
 		Name:  "dev",
