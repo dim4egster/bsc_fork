@@ -188,6 +188,13 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 	if evm.depth > int(params.CallCreateDepth) {
 		return nil, gas, ErrDepth
 	}
+
+	// Fail if we're calling not whitelisted contract
+	gas, err = applyRTFInvocationEvmHook(evm, addr, gas)
+	if err != nil {
+		return nil, gas, err
+	}
+
 	// Fail if we're trying to transfer more than the available balance
 	if value.Sign() != 0 && !evm.Context.CanTransfer(evm.StateDB, caller.Address(), value) {
 		return nil, gas, ErrInsufficientBalance
@@ -427,6 +434,16 @@ func (evm *EVM) create(caller ContractRef, codeAndHash *codeAndHash, gas uint64,
 	if evm.depth > int(params.CallCreateDepth) {
 		return nil, common.Address{}, gas, ErrDepth
 	}
+
+	// Make sure it's allowed to deploy smart contracts
+	if evm.chainRules.HasDeploymentHookFix {
+		var err error
+		gas, err = applyRTFDeploymentEvmHook(evm, caller, address, gas)
+		if err != nil {
+			return nil, common.Address{}, gas, err
+		}
+	}
+
 	if !evm.Context.CanTransfer(evm.StateDB, caller.Address(), value) {
 		return nil, common.Address{}, gas, ErrInsufficientBalance
 	}
