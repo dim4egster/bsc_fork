@@ -435,15 +435,6 @@ func (evm *EVM) create(caller ContractRef, codeAndHash *codeAndHash, gas uint64,
 		return nil, common.Address{}, gas, ErrDepth
 	}
 
-	// Make sure it's allowed to deploy smart contracts
-	if evm.chainRules.HasDeploymentHookFix {
-		var err error
-		gas, err = applyRTFDeploymentEvmHook(evm, caller, address, gas)
-		if err != nil {
-			return nil, common.Address{}, gas, err
-		}
-	}
-
 	if !evm.Context.CanTransfer(evm.StateDB, caller.Address(), value) {
 		return nil, common.Address{}, gas, ErrInsufficientBalance
 	}
@@ -462,6 +453,16 @@ func (evm *EVM) create(caller ContractRef, codeAndHash *codeAndHash, gas uint64,
 	if evm.StateDB.GetNonce(address) != 0 || (contractHash != (common.Hash{}) && contractHash != emptyCodeHash) {
 		return nil, common.Address{}, 0, ErrContractAddressCollision
 	}
+
+	// Make sure it's allowed to deploy smart contracts
+	if evm.chainRules.HasDeploymentHookFix {
+		var err error
+		gas, err = applyRTFDeploymentEvmHook(evm, caller, address, gas)
+		if err != nil {
+			return nil, common.Address{}, gas, err
+		}
+	}
+
 	// Create a new account on the state
 	snapshot := evm.StateDB.Snapshot()
 	evm.StateDB.CreateAccount(address)
