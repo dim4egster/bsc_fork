@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/config"
 	"github.com/ethereum/go-ethereum/core"
+	"github.com/ethereum/go-ethereum/secrets"
 	"math/big"
 	"os"
 	"reflect"
@@ -92,6 +93,7 @@ type gethConfig struct {
 	Node     node.Config
 	Ethstats ethstatsConfig
 	Metrics  metrics.Config
+	Secrets  secrets.SecretsManagerConfig
 }
 
 func loadConfig(file string, cfg *gethConfig) error {
@@ -167,6 +169,7 @@ func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
 
 	// Apply flags.
 	utils.SetNodeConfig(ctx, &cfg.Node)
+	utils.SetSecretsConfig(ctx, &cfg.Secrets)
 	stack, err := node.New(&cfg.Node)
 	if err != nil {
 		utils.Fatalf("Failed to create the protocol stack: %v", err)

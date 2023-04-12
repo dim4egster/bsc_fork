@@ -268,6 +268,7 @@ func accountCreate(ctx *cli.Context) error {
 		}
 	}
 	utils.SetNodeConfig(ctx, &cfg.Node)
+	utils.SetSecretsConfig(ctx, &cfg.Secrets)
 	keydir, err := cfg.Node.KeyDirConfig()
 	if err != nil {
 		utils.Fatalf("Failed to read configuration: %v", err)

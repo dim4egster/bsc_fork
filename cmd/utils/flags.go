@@ -73,6 +73,7 @@ import (
 	"github.com/ethereum/go-ethereum/p2p/nat"
 	"github.com/ethereum/go-ethereum/p2p/netutil"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/ethereum/go-ethereum/secrets"
 )
 
 func init() {
@@ -903,6 +904,21 @@ var (
 		Name:  "monitor.doublesign",
 		Usage: "Enable double sign monitor to check whether any validator signs multiple blocks",
 	}
+
+	SecretsManagerTypeFlag = cli.StringFlag{
+		Name:  "secrets.managers.type",
+		Usage: "Type of secrets manager (local|hashicorp-vault|aws-ssm|gcp-ssm)",
+	}
+
+	SecretsVaultTokenFlag = cli.StringFlag{
+		Name:  "secrets.vault.token",
+		Usage: "Token to authorize access to the Hashicorp Vault server",
+	}
+
+	SecretsVaultServerURLFlag = cli.StringFlag{
+		Name:  "secrets.vault.url",
+		Usage: "URL to the Hashicorp Vault server",
+	}
 )
 
 // MakeDataDir retrieves the currently requested data directory, terminating
@@ -1305,6 +1321,23 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 		cfg.NoDiscovery = true
 		cfg.DiscoveryV5 = false
 	}
+}
+
+// SetSercretsConfig applies secrets-related command line flags to the config.
+func SetSecretsConfig(ctx *cli.Context, cfg *secrets.SecretsManagerConfig) {
+
+	if ctx.GlobalIsSet(SecretsVaultServerURLFlag.Name) {
+		cfg.ServerURL = ctx.GlobalString(SecretsVaultServerURLFlag.Name)
+	}
+
+	if ctx.GlobalIsSet(SecretsVaultTokenFlag.Name) {
+		cfg.Token = ctx.GlobalString(SecretsVaultTokenFlag.Name)
+	}
+
+	if ctx.GlobalIsSet(SecretsManagerTypeFlag.Name) {
+		cfg.Type = secrets.SecretsManagerType(ctx.GlobalString(SecretsManagerTypeFlag.Name))
+	}
+
 }
 
 // SetNodeConfig applies node-related command line flags to the config.

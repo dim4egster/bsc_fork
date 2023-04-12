@@ -1,4 +1,4 @@
-package managers
+package secrets
 
 import (
 	"encoding/json"
@@ -9,12 +9,12 @@ import (
 // SecretsManagerConfig is the configuration that gets
 // written to a single configuration file
 type SecretsManagerConfig struct {
-	Token     string                 `json:"token"`      // Access token to the instance
-	ServerURL string                 `json:"server_url"` // The URL of the running server
-	Type      SecretsManagerType     `json:"type"`       // The type of SecretsManager
-	Name      string                 `json:"name"`       // The name of the current node
-	Namespace string                 `json:"namespace"`  // The namespace of the service
-	Extra     map[string]interface{} `json:"extra"`      // Any kind of arbitrary data
+	Token     string                 `toml:",omitempty"` // Access token to the instance
+	ServerURL string                 `toml:",omitempty"` // The URL of the running server
+	Type      SecretsManagerType     `toml:",omitempty"` // The type of SecretsManager
+	Name      string                 `toml:",omitempty"` // The name of the current node
+	Namespace string                 `toml:",omitempty"` // The namespace of the service
+	Extra     map[string]interface{} `toml:",omitempty"` // Any kind of arbitrary data
 }
 
 // WriteConfig writes the current configuration to the specified path

@@ -3,8 +3,7 @@ package hashicorpvault
 import (
 	"errors"
 	"fmt"
-	"github.com/ethereum/go-ethereum/secrets/managers"
-
+	"github.com/ethereum/go-ethereum/secrets"
 	"github.com/hashicorp/go-hclog"
 	vault "github.com/hashicorp/vault/api"
 )
@@ -36,12 +35,12 @@ type VaultSecretsManager struct {
 
 // SecretsManagerFactory implements the factory method
 func SecretsManagerFactory(
-	config *managers.SecretsManagerConfig,
-	params *managers.SecretsManagerParams,
-) (managers.SecretsManager, error) {
+	config *secrets.SecretsManagerConfig,
+	params *secrets.SecretsManagerParams,
+) (secrets.SecretsManager, error) {
 	// Set up the base object
 	vaultManager := &VaultSecretsManager{
-		logger: params.Logger.Named(string(managers.HashicorpVault)),
+		logger: params.Logger.Named(string(secrets.HashicorpVault)),
 	}
 
 	// Check if the token is present
@@ -116,7 +115,7 @@ func (v *VaultSecretsManager) GetSecret(name string) ([]byte, error) {
 	}
 
 	if secret == nil {
-		return nil, managers.ErrSecretNotFound
+		return nil, secrets.ErrSecretNotFound
 	}
 
 	// KV-2 (versioned key-value storage) in Vault stores data in the following format:
@@ -136,19 +135,19 @@ func (v *VaultSecretsManager) GetSecret(name string) ([]byte, error) {
 
 	// Check if the data is empty
 	if data == nil {
-		return nil, managers.ErrSecretNotFound
+		return nil, secrets.ErrSecretNotFound
 	}
 
 	// Convert data into a map
 	secretsMap, ok := data.(map[string]interface{})
 	if !ok {
-		return nil, managers.ErrSecretNotFound
+		return nil, secrets.ErrSecretNotFound
 	}
 
 	// Grab the value
 	value, ok := secretsMap[name]
 	if !ok {
-		return nil, managers.ErrSecretNotFound
+		return nil, secrets.ErrSecretNotFound
 	}
 
 	stringVal, ok := value.(string)
@@ -167,7 +166,7 @@ func (v *VaultSecretsManager) SetSecret(name string, value []byte) error {
 	if err == nil {
 		// Secret is present
 		v.logger.Warn(fmt.Sprintf("Overwriting secret: %s", name))
-	} else if !errors.Is(err, managers.ErrSecretNotFound) {
+	} else if !errors.Is(err, secrets.ErrSecretNotFound) {
 		// An unrelated error occurred
 		return err
 	}

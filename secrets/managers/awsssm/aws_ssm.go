@@ -3,11 +3,10 @@ package awsssm
 import (
 	"errors"
 	"fmt"
-	"github.com/ethereum/go-ethereum/secrets/managers"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/ethereum/go-ethereum/secrets"
 	"github.com/hashicorp/go-hclog"
 )
 
@@ -29,8 +28,8 @@ type AwsSsmManager struct {
 
 // SecretsManagerFactory implements the factory method
 func SecretsManagerFactory(
-	config *managers.SecretsManagerConfig,
-	params *managers.SecretsManagerParams) (managers.SecretsManager, error) { //nolint
+	config *secrets.SecretsManagerConfig,
+	params *secrets.SecretsManagerParams) (secrets.SecretsManager, error) { //nolint
 
 	// Check if the node name is present
 	if config.Name == "" {
@@ -44,7 +43,7 @@ func SecretsManagerFactory(
 
 	// / Set up the base object
 	awsSsmManager := &AwsSsmManager{
-		logger: params.Logger.Named(string(managers.AWSSSM)),
+		logger: params.Logger.Named(string(secrets.AWSSSM)),
 		region: fmt.Sprintf("%v", config.Extra["region"]),
 	}
 
@@ -87,7 +86,7 @@ func (a *AwsSsmManager) GetSecret(name string) ([]byte, error) {
 		WithDecryption: aws.Bool(true),
 	})
 	if err != nil || param == nil {
-		return nil, managers.ErrSecretNotFound
+		return nil, secrets.ErrSecretNotFound
 	}
 
 	value := *param.Parameter.Value

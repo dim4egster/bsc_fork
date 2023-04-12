@@ -3,7 +3,7 @@ package gcpssm
 import (
 	"context"
 	"fmt"
-	"github.com/ethereum/go-ethereum/secrets/managers"
+	"github.com/ethereum/go-ethereum/secrets"
 	"os"
 
 	"github.com/hashicorp/go-hclog"
@@ -49,9 +49,9 @@ var (
 )
 
 func SecretsManagerFactory(
-	config *managers.SecretsManagerConfig,
-	params *managers.SecretsManagerParams,
-) (managers.SecretsManager, error) {
+	config *secrets.SecretsManagerConfig,
+	params *secrets.SecretsManagerParams,
+) (secrets.SecretsManager, error) {
 	// Check if project id is defined
 	if _, ok := config.Extra[string(projectID)]; !ok {
 		return nil, errNoProjectID
@@ -69,7 +69,7 @@ func SecretsManagerFactory(
 		projectID:    fmt.Sprintf("%s", config.Extra[string(projectID)]),
 		credFilePath: fmt.Sprintf("%s", config.Extra[string(gcpSSMCredFile)]),
 		nodeName:     config.Name,
-		logger:       params.Logger.Named(string(managers.GCPSSM)),
+		logger:       params.Logger.Named(string(secrets.GCPSSM)),
 	}
 
 	if err := gcpSsmManager.Setup(); err != nil {

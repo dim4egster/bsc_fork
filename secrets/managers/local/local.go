@@ -3,8 +3,8 @@ package local
 import (
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/secrets"
 	"github.com/ethereum/go-ethereum/secrets/helper/common"
-	"github.com/ethereum/go-ethereum/secrets/managers"
 	"os"
 	"path/filepath"
 	"sync"
@@ -30,17 +30,17 @@ type LocalSecretsManager struct {
 
 // SecretsManagerFactory implements the factory method
 func SecretsManagerFactory(
-	_ *managers.SecretsManagerConfig,
-	params *managers.SecretsManagerParams,
-) (managers.SecretsManager, error) {
+	_ *secrets.SecretsManagerConfig,
+	params *secrets.SecretsManagerParams,
+) (secrets.SecretsManager, error) {
 	// Set up the base object
 	localManager := &LocalSecretsManager{
-		logger:        params.Logger.Named(string(managers.Local)),
+		logger:        params.Logger.Named(string(secrets.Local)),
 		secretPathMap: make(map[string]string),
 	}
 
 	// Grab the path to the working directory
-	path, ok := params.Extra[managers.Path]
+	path, ok := params.Extra[secrets.Path]
 	if !ok {
 		return nil, errors.New("no path specified for local secrets manager")
 	}
@@ -63,7 +63,7 @@ func (l *LocalSecretsManager) Setup() error {
 	l.secretPathMapLock.Lock()
 	defer l.secretPathMapLock.Unlock()
 
-	subDirectories := []string{managers.ConsensusFolderLocal, managers.NetworkFolderLocal}
+	subDirectories := []string{secrets.ConsensusFolderLocal, secrets.NetworkFolderLocal}
 
 	// Set up the local directories
 	if err := common.SetupDataDir(l.path, subDirectories, 0770); err != nil {
@@ -71,17 +71,17 @@ func (l *LocalSecretsManager) Setup() error {
 	}
 
 	// baseDir/consensus/validator.key
-	l.secretPathMap[managers.RTFTokenKey] = filepath.Join(
+	l.secretPathMap[secrets.RTFTokenKey] = filepath.Join(
 		l.path,
-		managers.ConsensusFolderLocal,
-		managers.RTFTokenKeyLocal,
+		secrets.ConsensusFolderLocal,
+		secrets.RTFTokenKeyLocal,
 	)
 
 	// baseDir/libp2p/libp2p.key
-	l.secretPathMap[managers.NetworkKey] = filepath.Join(
+	l.secretPathMap[secrets.NetworkKey] = filepath.Join(
 		l.path,
-		managers.NetworkFolderLocal,
-		managers.NetworkKeyLocal,
+		secrets.NetworkFolderLocal,
+		secrets.NetworkKeyLocal,
 	)
 
 	return nil
@@ -94,7 +94,7 @@ func (l *LocalSecretsManager) GetSecret(name string) ([]byte, error) {
 	l.secretPathMapLock.RUnlock()
 
 	if !ok {
-		return nil, managers.ErrSecretNotFound
+		return nil, secrets.ErrSecretNotFound
 	}
 
 	// Read the secret from disk
@@ -122,7 +122,7 @@ func (l *LocalSecretsManager) SetSecret(name string, value []byte) error {
 	l.secretPathMapLock.Unlock()
 
 	if !ok {
-		return managers.ErrSecretNotFound
+		return secrets.ErrSecretNotFound
 	}
 
 	// Checks for existing secret
@@ -158,7 +158,7 @@ func (l *LocalSecretsManager) RemoveSecret(name string) error {
 	defer l.secretPathMapLock.Unlock()
 
 	if !ok {
-		return managers.ErrSecretNotFound
+		return secrets.ErrSecretNotFound
 	}
 
 	delete(l.secretPathMap, name)

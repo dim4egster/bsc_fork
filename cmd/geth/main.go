@@ -171,6 +171,9 @@ var (
 		utils.BlockAmountReserved,
 		utils.CheckSnapshotWithMPT,
 		utils.EnableDoubleSignMonitorFlag,
+		utils.SecretsVaultTokenFlag,
+		utils.SecretsVaultServerURLFlag,
+		utils.SecretsManagerTypeFlag,
 	}
 
 	rpcFlags = []cli.Flag{
