@@ -215,6 +215,9 @@ func makeFullNode(ctx *cli.Context) (*node.Node, ethapi.Backend) {
 		utils.EnableBuildInfo(gitCommit, gitDate),
 		utils.EnableMinerInfo(ctx, cfg.Eth.Miner),
 	)
+	// Setup secret manager for the node
+	utils.SetupSecretsManager(stack)
+
 	return stack, backend
 }
 

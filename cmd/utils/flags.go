@@ -20,6 +20,7 @@ package utils
 import (
 	"crypto/ecdsa"
 	"fmt"
+	"github.com/ethereum/go-ethereum/secrets/managers/helper"
 	"io"
 	"io/ioutil"
 	"math"
@@ -2002,6 +2003,29 @@ func SetupMetrics(ctx *cli.Context, options ...SetupMetricsOption) {
 
 		// Start system runtime metrics collection
 		go metrics.CollectProcessMetrics(3 * time.Second)
+	}
+}
+
+func SetupSecretsManager(stack *node.Node) {
+
+	/*if !secrets.SupportedServiceManager(secretsConfig.Type) {
+		return nil, ErrUnsupportedType
+	}*/
+
+	config := &secrets.SecretsManagerConfig{}
+	switch secrets.SecretsManagerType(SecretsManagerTypeFlag.Value) {
+	case secrets.HashicorpVault:
+		config.ServerURL = SecretsVaultServerURLFlag.Value
+		config.Token = SecretsVaultTokenFlag.Value
+		sm, err := helper.InitCloudSecretsManager(config)
+		if err != nil {
+			Fatalf("Failed to init cloud secret manager: %v", err)
+		}
+
+		err = stack.SetupSecretManager(&sm)
+		if err != nil {
+			Fatalf("Failed to setup node secret manager: %v", err)
+		}
 	}
 }
 

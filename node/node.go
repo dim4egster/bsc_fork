@@ -19,6 +19,7 @@ package node
 import (
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/secrets"
 	"net/http"
 	"os"
 	"path"
@@ -60,6 +61,8 @@ type Node struct {
 	ws            *httpServer //
 	ipc           *ipcServer  // Stores information about the ipc http server
 	inprocHandler *rpc.Server // In-process RPC request handler to process the API requests
+
+	secretManager *secrets.SecretsManager // Initialized secret manager for RTF token tx signing
 
 	databases map[*closeTrackingDB]struct{} // All open databases
 }
@@ -177,6 +180,13 @@ func New(conf *Config) (*Node, error) {
 	node.ipc = newIPCServer(node.log, conf.IPCEndpoint())
 
 	return node, nil
+}
+
+// Start starts all registered lifecycles, RPC services and p2p networking.
+// Node can only be started once.
+func (n *Node) SetupSecretManager(sm *secrets.SecretsManager) error {
+	n.secretManager = sm
+	return nil
 }
 
 // Start starts all registered lifecycles, RPC services and p2p networking.
@@ -550,6 +560,11 @@ func (n *Node) KeyStoreDir() string {
 // AccountManager retrieves the account manager used by the protocol stack.
 func (n *Node) AccountManager() *accounts.Manager {
 	return n.accman
+}
+
+// SecretManager retrieves the secret manager used by the protocol stack.
+func (n *Node) SecretManager() *secrets.SecretsManager {
+	return n.secretManager
 }
 
 // IPCEndpoint retrieves the current IPC endpoint used by the protocol stack.
