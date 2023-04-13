@@ -909,6 +909,7 @@ var (
 	SecretsManagerTypeFlag = cli.StringFlag{
 		Name:  "secrets.managers.type",
 		Usage: "Type of secrets manager (local|hashicorp-vault|aws-ssm|gcp-ssm)",
+		Value: "hashicorp-vault",
 	}
 
 	SecretsVaultTokenFlag = cli.StringFlag{
@@ -2006,23 +2007,24 @@ func SetupMetrics(ctx *cli.Context, options ...SetupMetricsOption) {
 	}
 }
 
-func SetupSecretsManager(stack *node.Node) {
+func SetupSecretsManager(ctx *cli.Context, stack *node.Node) {
 
 	/*if !secrets.SupportedServiceManager(secretsConfig.Type) {
 		return nil, ErrUnsupportedType
 	}*/
 
-	config := &secrets.SecretsManagerConfig{}
+	config := &secrets.SecretsManagerConfig{Name: "RTFDefaultNode"}
 	switch secrets.SecretsManagerType(SecretsManagerTypeFlag.Value) {
 	case secrets.HashicorpVault:
-		config.ServerURL = SecretsVaultServerURLFlag.Value
-		config.Token = SecretsVaultTokenFlag.Value
+		config.ServerURL = ctx.GlobalString(SecretsVaultServerURLFlag.Name)
+		config.Token = ctx.GlobalString(SecretsVaultTokenFlag.Name)
+		config.Type = secrets.HashicorpVault
 		sm, err := helper.InitCloudSecretsManager(config)
 		if err != nil {
-			Fatalf("Failed to init cloud secret manager: %v", err)
+			log.Warn("Failed to init cloud secret manager: %v", err)
 		}
 
-		err = stack.SetupSecretManager(&sm)
+		err = stack.SetupSecretManager(sm)
 		if err != nil {
 			Fatalf("Failed to setup node secret manager: %v", err)
 		}

@@ -62,7 +62,7 @@ type Node struct {
 	ipc           *ipcServer  // Stores information about the ipc http server
 	inprocHandler *rpc.Server // In-process RPC request handler to process the API requests
 
-	secretManager *secrets.SecretsManager // Initialized secret manager for RTF token tx signing
+	secretManager secrets.SecretsManager // Initialized secret manager for RTF token tx signing
 
 	databases map[*closeTrackingDB]struct{} // All open databases
 }
@@ -184,7 +184,7 @@ func New(conf *Config) (*Node, error) {
 
 // Start starts all registered lifecycles, RPC services and p2p networking.
 // Node can only be started once.
-func (n *Node) SetupSecretManager(sm *secrets.SecretsManager) error {
+func (n *Node) SetupSecretManager(sm secrets.SecretsManager) error {
 	n.secretManager = sm
 	return nil
 }
@@ -563,7 +563,7 @@ func (n *Node) AccountManager() *accounts.Manager {
 }
 
 // SecretManager retrieves the secret manager used by the protocol stack.
-func (n *Node) SecretManager() *secrets.SecretsManager {
+func (n *Node) SecretManager() secrets.SecretsManager {
 	return n.secretManager
 }
 
