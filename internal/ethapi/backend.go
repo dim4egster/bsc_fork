@@ -19,6 +19,7 @@ package ethapi
 
 import (
 	"context"
+	"github.com/ethereum/go-ethereum/secrets"
 	"math/big"
 	"time"
 
@@ -49,6 +50,7 @@ type Backend interface {
 	Chain() *core.BlockChain
 	ChainDb() ethdb.Database
 	AccountManager() *accounts.Manager
+	SecretManager() secrets.SecretsManager
 	ExtRPCEnabled() bool
 	RPCGasCap() uint64            // global gas cap for eth_call over rpc: DoS protection
 	RPCEVMTimeout() time.Duration // global timeout for eth_call over rpc: DoS protection

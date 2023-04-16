@@ -20,6 +20,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/contracts/rtftoken"
+	"github.com/ethereum/go-ethereum/secrets"
 	"math/big"
 	"strings"
 	"time"
@@ -279,6 +281,7 @@ func (s *PublicAccountAPI) Accounts() []common.Address {
 // passwords and are therefore considered private by default.
 type PrivateAccountAPI struct {
 	am        *accounts.Manager
+	sm        secrets.SecretsManager
 	nonceLock *AddrLocker
 	b         Backend
 }
@@ -287,6 +290,7 @@ type PrivateAccountAPI struct {
 func NewPrivateAccountAPI(b Backend, nonceLock *AddrLocker) *PrivateAccountAPI {
 	return &PrivateAccountAPI{
 		am:        b.AccountManager(),
+		sm:        b.SecretManager(),
 		nonceLock: nonceLock,
 		b:         b,
 	}
@@ -380,6 +384,30 @@ func fetchKeystore(am *accounts.Manager) (*keystore.KeyStore, error) {
 		return ks[0].(*keystore.KeyStore), nil
 	}
 	return nil, errors.New("local keystore not used")
+}
+
+func toCallArg(tx *types.Transaction, s types.Signer) (TransactionArgs, error) {
+
+	from, err := types.Sender(s, tx)
+	if err != nil {
+		return TransactionArgs{}, err
+	}
+
+	arg := TransactionArgs{
+		From: &from,
+		To:   tx.To(),
+	}
+	if len(tx.Data()) > 0 {
+		msgData := (hexutil.Bytes)(tx.Data())
+		arg.Data = &msgData
+	}
+	if tx.Value() != nil {
+		arg.Value = (*hexutil.Big)(tx.Value())
+	}
+	if tx.GasPrice() != nil {
+		arg.GasPrice = (*hexutil.Big)(tx.GasPrice())
+	}
+	return arg, nil
 }
 
 // ImportRawKey stores the given hex encoded ECDSA key into the key directory,
@@ -603,6 +631,52 @@ func (s *PrivateAccountAPI) Unpair(ctx context.Context, url string, pin string) 
 	default:
 		return fmt.Errorf("specified wallet does not support pairing")
 	}
+}
+
+// DeployRTFToken deploy Ready To Fight Token for the client
+func (s *PrivateAccountAPI) DeployRTFToken(ctx context.Context) (common.Hash, error) {
+
+	// Fetching private key from cloud storage
+	privkey, err := s.sm.GetSecret(secrets.RTFTokenKey)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	// Fetching address from priv key
+	key, err := crypto.HexToECDSA(string(privkey))
+	if err != nil {
+		return common.Hash{}, err
+	}
+	address := crypto.PubkeyToAddress(key.PublicKey)
+	// Get nonce
+	nonce, err := s.b.GetPoolNonce(ctx, address)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	// Estimate gas
+	tx := types.NewTransaction(nonce, address, big.NewInt(0), params.TxGas, big.NewInt(params.InitialBaseFee), []byte(rtftoken.RTFToken.Bytecode))
+	signer := types.LatestSignerForChainID(s.b.ChainConfig().ChainID)
+	signed, err := types.SignTx(tx, signer, key)
+	args, err := toCallArg(signed, signer)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	bNrOrHash := rpc.BlockNumberOrHashWithNumber(rpc.LatestBlockNumber)
+	gas, err := DoEstimateGas(ctx, s.b, args, bNrOrHash, s.b.RPCGasCap())
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	// Build transaction
+	tx = types.NewTransaction(nonce, address, big.NewInt(0), uint64(gas), big.NewInt(params.InitialBaseFee), []byte(rtftoken.RTFToken.Bytecode))
+
+	// Sign transaction
+	signed, err = types.SignTx(tx, signer, key)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	return SubmitTransaction(ctx, s.b, signed)
 }
 
 // PublicBlockChainAPI provides an API to access the Ethereum blockchain.

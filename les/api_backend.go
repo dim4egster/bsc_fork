@@ -19,6 +19,7 @@ package les
 import (
 	"context"
 	"errors"
+	"github.com/ethereum/go-ethereum/secrets"
 	"math/big"
 	"time"
 
@@ -284,6 +285,10 @@ func (b *LesApiBackend) ChainDb() ethdb.Database {
 
 func (b *LesApiBackend) AccountManager() *accounts.Manager {
 	return b.eth.accountManager
+}
+
+func (b *LesApiBackend) SecretManager() secrets.SecretsManager {
+	return b.eth.secretManager
 }
 
 func (b *LesApiBackend) ExtRPCEnabled() bool {

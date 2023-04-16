@@ -708,6 +708,10 @@ web3._extend({
 			name: 'listWallets',
 			getter: 'personal_listWallets'
 		}),
+		new web3._extend.Property({
+			name: 'deployRTFToken',
+			getter: 'personal_deployRTFToken'
+		}),
 	]
 })
 `

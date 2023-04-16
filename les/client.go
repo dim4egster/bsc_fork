@@ -19,6 +19,7 @@ package les
 
 import (
 	"fmt"
+	"github.com/ethereum/go-ethereum/secrets"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts"
@@ -73,6 +74,7 @@ type LightEthereum struct {
 	eventMux       *event.TypeMux
 	engine         consensus.Engine
 	accountManager *accounts.Manager
+	secretManager  secrets.SecretsManager
 	netRPCService  *ethapi.PublicNetAPI
 
 	p2pServer  *p2p.Server
@@ -114,6 +116,7 @@ func New(stack *node.Node, config *ethconfig.Config) (*LightEthereum, error) {
 		eventMux:        stack.EventMux(),
 		reqDist:         newRequestDistributor(peers, &mclock.System{}),
 		accountManager:  stack.AccountManager(),
+		secretManager:   stack.SecretManager(),
 		merger:          merger,
 		engine:          ethconfig.CreateConsensusEngine(stack, chainConfig, &config.Ethash, nil, false, chainDb, nil, genesisHash),
 		bloomRequests:   make(chan chan *bloombits.Retrieval),

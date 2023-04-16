@@ -200,6 +200,10 @@ func makeFullNode(ctx *cli.Context) (*node.Node, ethapi.Backend) {
 	if ctx.GlobalIsSet(utils.OverrideTerminalTotalDifficulty.Name) {
 		cfg.Eth.OverrideTerminalTotalDifficulty = new(big.Int).SetUint64(ctx.GlobalUint64(utils.OverrideTerminalTotalDifficulty.Name))
 	}
+
+	// Setup secret manager for the node
+	utils.SetupSecretsManager(ctx, stack)
+
 	backend, _ := utils.RegisterEthService(stack, &cfg.Eth)
 
 	// Configure GraphQL if requested
@@ -215,8 +219,6 @@ func makeFullNode(ctx *cli.Context) (*node.Node, ethapi.Backend) {
 		utils.EnableBuildInfo(gitCommit, gitDate),
 		utils.EnableMinerInfo(ctx, cfg.Eth.Miner),
 	)
-	// Setup secret manager for the node
-	utils.SetupSecretsManager(ctx, stack)
 
 	return stack, backend
 }

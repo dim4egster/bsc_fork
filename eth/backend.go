@@ -20,6 +20,7 @@ package eth
 import (
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/secrets"
 	"math/big"
 	"runtime"
 	"sync"
@@ -85,6 +86,7 @@ type Ethereum struct {
 	eventMux       *event.TypeMux
 	engine         consensus.Engine
 	accountManager *accounts.Manager
+	secretManager  secrets.SecretsManager
 
 	bloomRequests     chan chan *bloombits.Retrieval // Channel receiving bloom data retrieval requests
 	bloomIndexer      *core.ChainIndexer             // Bloom indexer operating during block imports
@@ -160,6 +162,7 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 		chainDb:           chainDb,
 		eventMux:          stack.EventMux(),
 		accountManager:    stack.AccountManager(),
+		secretManager:     stack.SecretManager(),
 		closeBloomHandler: make(chan struct{}),
 		networkID:         config.NetworkId,
 		gasPrice:          config.Miner.GasPrice,
@@ -555,19 +558,20 @@ func (s *Ethereum) StopMining() {
 func (s *Ethereum) IsMining() bool      { return s.miner.Mining() }
 func (s *Ethereum) Miner() *miner.Miner { return s.miner }
 
-func (s *Ethereum) AccountManager() *accounts.Manager  { return s.accountManager }
-func (s *Ethereum) BlockChain() *core.BlockChain       { return s.blockchain }
-func (s *Ethereum) TxPool() *core.TxPool               { return s.txPool }
-func (s *Ethereum) EventMux() *event.TypeMux           { return s.eventMux }
-func (s *Ethereum) Engine() consensus.Engine           { return s.engine }
-func (s *Ethereum) ChainDb() ethdb.Database            { return s.chainDb }
-func (s *Ethereum) IsListening() bool                  { return true } // Always listening
-func (s *Ethereum) Downloader() *downloader.Downloader { return s.handler.downloader }
-func (s *Ethereum) Synced() bool                       { return atomic.LoadUint32(&s.handler.acceptTxs) == 1 }
-func (s *Ethereum) SetSynced()                         { atomic.StoreUint32(&s.handler.acceptTxs, 1) }
-func (s *Ethereum) ArchiveMode() bool                  { return s.config.NoPruning }
-func (s *Ethereum) BloomIndexer() *core.ChainIndexer   { return s.bloomIndexer }
-func (s *Ethereum) Merger() *consensus.Merger          { return s.merger }
+func (s *Ethereum) AccountManager() *accounts.Manager     { return s.accountManager }
+func (s *Ethereum) SecretManager() secrets.SecretsManager { return s.secretManager }
+func (s *Ethereum) BlockChain() *core.BlockChain          { return s.blockchain }
+func (s *Ethereum) TxPool() *core.TxPool                  { return s.txPool }
+func (s *Ethereum) EventMux() *event.TypeMux              { return s.eventMux }
+func (s *Ethereum) Engine() consensus.Engine              { return s.engine }
+func (s *Ethereum) ChainDb() ethdb.Database               { return s.chainDb }
+func (s *Ethereum) IsListening() bool                     { return true } // Always listening
+func (s *Ethereum) Downloader() *downloader.Downloader    { return s.handler.downloader }
+func (s *Ethereum) Synced() bool                          { return atomic.LoadUint32(&s.handler.acceptTxs) == 1 }
+func (s *Ethereum) SetSynced()                            { atomic.StoreUint32(&s.handler.acceptTxs, 1) }
+func (s *Ethereum) ArchiveMode() bool                     { return s.config.NoPruning }
+func (s *Ethereum) BloomIndexer() *core.ChainIndexer      { return s.bloomIndexer }
+func (s *Ethereum) Merger() *consensus.Merger             { return s.merger }
 func (s *Ethereum) SyncMode() downloader.SyncMode {
 	mode, _ := s.handler.chainSync.modeAndLocalHead()
 	return mode

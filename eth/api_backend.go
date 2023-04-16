@@ -19,6 +19,7 @@ package eth
 import (
 	"context"
 	"errors"
+	"github.com/ethereum/go-ethereum/secrets"
 	"math/big"
 	"time"
 
@@ -307,6 +308,10 @@ func (b *EthAPIBackend) EventMux() *event.TypeMux {
 
 func (b *EthAPIBackend) AccountManager() *accounts.Manager {
 	return b.eth.AccountManager()
+}
+
+func (b *EthAPIBackend) SecretManager() secrets.SecretsManager {
+	return b.eth.SecretManager()
 }
 
 func (b *EthAPIBackend) ExtRPCEnabled() bool {
