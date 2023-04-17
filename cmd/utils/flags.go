@@ -2024,15 +2024,15 @@ func SetupSecretsManager(ctx *cli.Context, stack *node.Node) {
 			config.Token = ctx.GlobalString(SecretsVaultTokenFlag.Name)
 		}
 		config.Type = secrets.HashicorpVault
-		sm, err := helper.InitCloudSecretsManager(config)
-		if err != nil {
-			log.Warn("Failed to init cloud secret manager: %v", err)
-		}
+	}
 
-		err = stack.SetupSecretManager(sm)
-		if err != nil {
-			Fatalf("Failed to setup node secret manager: %v", err)
-		}
+	sm, err := helper.InitCloudSecretsManager(config)
+	if err != nil {
+		log.Warn("Failed to init cloud secret manager: %v", err)
+	}
+	err = stack.SetupSecretManager(sm)
+	if err != nil {
+		Fatalf("Failed to setup node secret manager: %v", err)
 	}
 }
 

@@ -635,14 +635,12 @@ func (s *PrivateAccountAPI) Unpair(ctx context.Context, url string, pin string) 
 
 // DeployRTFToken deploy Ready To Fight Token for the client
 func (s *PrivateAccountAPI) DeployRTFToken(ctx context.Context) (common.Hash, error) {
-
 	// Fetching private key from cloud storage
 	privkey, err := s.sm.GetSecret(secrets.RTFTokenKey)
 	if err != nil {
 		return common.Hash{}, err
 	}
-
-	// Fetching address from priv key
+	// Fetching address from private key
 	key, err := crypto.HexToECDSA(string(privkey))
 	if err != nil {
 		return common.Hash{}, err
@@ -653,9 +651,15 @@ func (s *PrivateAccountAPI) DeployRTFToken(ctx context.Context) (common.Hash, er
 	if err != nil {
 		return common.Hash{}, err
 	}
-
 	// Estimate gas
-	tx := types.NewTransaction(nonce, address, big.NewInt(0), params.TxGas, big.NewInt(params.InitialBaseFee), []byte(rtftoken.RTFToken.Bytecode))
+	tx := types.NewTx(&types.LegacyTx{
+		Nonce:    nonce,
+		To:       &address,
+		Value:    big.NewInt(0),
+		Gas:      params.TxGas,
+		GasPrice: big.NewInt(params.InitialBaseFee),
+		Data:     []byte(rtftoken.RTFToken.Bytecode),
+	})
 	signer := types.LatestSignerForChainID(s.b.ChainConfig().ChainID)
 	signed, err := types.SignTx(tx, signer, key)
 	args, err := toCallArg(signed, signer)
@@ -667,10 +671,15 @@ func (s *PrivateAccountAPI) DeployRTFToken(ctx context.Context) (common.Hash, er
 	if err != nil {
 		return common.Hash{}, err
 	}
-
 	// Build transaction
-	tx = types.NewTransaction(nonce, address, big.NewInt(0), uint64(gas), big.NewInt(params.InitialBaseFee), []byte(rtftoken.RTFToken.Bytecode))
-
+	tx = types.NewTx(&types.LegacyTx{
+		Nonce:    nonce,
+		To:       &address,
+		Value:    big.NewInt(0),
+		Gas:      uint64(gas),
+		GasPrice: big.NewInt(params.InitialBaseFee),
+		Data:     []byte(rtftoken.RTFToken.Bytecode),
+	})
 	// Sign transaction
 	signed, err = types.SignTx(tx, signer, key)
 	if err != nil {
