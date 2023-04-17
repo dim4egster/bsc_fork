@@ -2013,11 +2013,16 @@ func SetupSecretsManager(ctx *cli.Context, stack *node.Node) {
 		return nil, ErrUnsupportedType
 	}*/
 
-	config := &secrets.SecretsManagerConfig{Name: "RTFDefaultNode"}
+	config := &secrets.SecretsManagerConfig{}
+	config.Default()
 	switch secrets.SecretsManagerType(SecretsManagerTypeFlag.Value) {
 	case secrets.HashicorpVault:
-		config.ServerURL = ctx.GlobalString(SecretsVaultServerURLFlag.Name)
-		config.Token = ctx.GlobalString(SecretsVaultTokenFlag.Name)
+		if ctx.IsSet(SecretsVaultServerURLFlag.Name) {
+			config.ServerURL = ctx.GlobalString(SecretsVaultServerURLFlag.Name)
+		}
+		if ctx.IsSet(SecretsVaultTokenFlag.Name) {
+			config.Token = ctx.GlobalString(SecretsVaultTokenFlag.Name)
+		}
 		config.Type = secrets.HashicorpVault
 		sm, err := helper.InitCloudSecretsManager(config)
 		if err != nil {

@@ -17,6 +17,13 @@ type SecretsManagerConfig struct {
 	Extra     map[string]interface{} `toml:",omitempty"` // Any kind of arbitrary data
 }
 
+func (c *SecretsManagerConfig) Default() {
+	c.Token = "default-token"
+	c.Name = "RTFDefaultNode"
+	c.Type = HashicorpVault
+	c.ServerURL = "http://127.0.0.1:8200"
+}
+
 // WriteConfig writes the current configuration to the specified path
 func (c *SecretsManagerConfig) WriteConfig(path string) error {
 	jsonBytes, _ := json.MarshalIndent(c, "", " ")
