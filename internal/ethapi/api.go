@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum/contracts/rtftoken"
+	"github.com/ethereum/go-ethereum/core/systemcontracts"
 	"github.com/ethereum/go-ethereum/secrets"
 	"math/big"
 	"strings"
@@ -401,7 +402,15 @@ func toCallArg(tx *types.Transaction, s types.Signer) (TransactionArgs, error) {
 		arg.Data = &msgData
 	}
 
-	arg.Value = (*hexutil.Big)(big.NewInt(0))
+	if tx.Value() != nil {
+		arg.Value = (*hexutil.Big)(tx.Value())
+	} else {
+		arg.Value = (*hexutil.Big)(big.NewInt(0))
+	}
+
+	if tx.To() != nil {
+		arg.To = tx.To()
+	}
 
 	return arg, nil
 }
@@ -629,22 +638,130 @@ func (s *PrivateAccountAPI) Unpair(ctx context.Context, url string, pin string) 
 	}
 }
 
-// DeployRTFToken deploy Ready To Fight Token for the client
-func (s *PrivateAccountAPI) DisableRTFToken(ctx context.Context, hash common.Hash) (common.Address, error) {
+// EnableRTFToken enable Ready To Fight Token contract
+func (s *PrivateAccountAPI) EnableRTFToken(ctx context.Context, addr common.Address) (common.Hash, error) {
 
-	_, blockHash, _, index, err := s.b.GetTransaction(ctx, hash)
+	input, err := systemcontracts.EvmHooksAbi.Pack("enableContract", addr)
 	if err != nil {
-		return common.Address{}, nil
+		return common.Hash{}, err
 	}
-	receipts, err := s.b.GetReceipts(ctx, blockHash)
+
+	// Fetching private key from cloud storage
+	privkey, err := s.sm.GetSecret(secrets.RTFTokenKey)
 	if err != nil {
-		return common.Address{}, err
+		return common.Hash{}, err
 	}
-	if len(receipts) <= int(index) {
-		return common.Address{}, nil
+
+	// Fetching address from private key
+	key, err := crypto.HexToECDSA(string(privkey))
+	if err != nil {
+		return common.Hash{}, err
 	}
-	receipt := receipts[index]
-	return receipt.ContractAddress, nil
+	address := crypto.PubkeyToAddress(key.PublicKey)
+
+	// Get nonce
+	nonce, err := s.b.GetPoolNonce(ctx, address)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	// Estimate gas
+	tx := types.NewTx(&types.LegacyTx{
+		To:   &systemcontracts.DeployerProxyContractAddress,
+		Data: input,
+	})
+	signer := types.LatestSignerForChainID(s.b.ChainConfig().ChainID)
+	signed, err := types.SignTx(tx, signer, key)
+	args, err := toCallArg(signed, signer)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	bNrOrHash := rpc.BlockNumberOrHashWithNumber(rpc.PendingBlockNumber)
+	gas, err := DoEstimateGas(ctx, s.b, args, bNrOrHash, s.b.RPCGasCap())
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	// Build transaction
+	tx = types.NewTx(&types.LegacyTx{
+		To:       &systemcontracts.DeployerProxyContractAddress,
+		Nonce:    nonce,
+		Gas:      uint64(gas),
+		GasPrice: big.NewInt(params.InitialBaseFee),
+		Data:     input,
+	})
+
+	// Sign transaction
+	signed, err = types.SignTx(tx, signer, key)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	return SubmitTransaction(ctx, s.b, signed)
+
+}
+
+// DisableRTFToken disable Ready To Fight Token contract
+func (s *PrivateAccountAPI) DisableRTFToken(ctx context.Context, addr common.Address) (common.Hash, error) {
+
+	input, err := systemcontracts.EvmHooksAbi.Pack("disableContract", addr)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	// Fetching private key from cloud storage
+	privkey, err := s.sm.GetSecret(secrets.RTFTokenKey)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	// Fetching address from private key
+	key, err := crypto.HexToECDSA(string(privkey))
+	if err != nil {
+		return common.Hash{}, err
+	}
+	address := crypto.PubkeyToAddress(key.PublicKey)
+
+	// Get nonce
+	nonce, err := s.b.GetPoolNonce(ctx, address)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	// Estimate gas
+	tx := types.NewTx(&types.LegacyTx{
+		To:   &systemcontracts.DeployerProxyContractAddress,
+		Data: input,
+	})
+	signer := types.LatestSignerForChainID(s.b.ChainConfig().ChainID)
+	signed, err := types.SignTx(tx, signer, key)
+	args, err := toCallArg(signed, signer)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	bNrOrHash := rpc.BlockNumberOrHashWithNumber(rpc.PendingBlockNumber)
+	gas, err := DoEstimateGas(ctx, s.b, args, bNrOrHash, s.b.RPCGasCap())
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	// Build transaction
+	tx = types.NewTx(&types.LegacyTx{
+		To:       &systemcontracts.DeployerProxyContractAddress,
+		Nonce:    nonce,
+		Gas:      uint64(gas),
+		GasPrice: big.NewInt(params.InitialBaseFee),
+		Data:     input,
+	})
+
+	// Sign transaction
+	signed, err = types.SignTx(tx, signer, key)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	return SubmitTransaction(ctx, s.b, signed)
+
 }
 
 // DeployRTFToken deploy Ready To Fight Token for the client

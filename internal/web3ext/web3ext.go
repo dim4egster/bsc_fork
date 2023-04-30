@@ -701,6 +701,18 @@ web3._extend({
 			name: 'initializeWallet',
 			call: 'personal_initializeWallet',
 			params: 1
+		}),
+		new web3._extend.Method({
+			name: 'disableRTFToken',
+			call: 'personal_disableRTFToken',
+			params: 1,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter]
+		}),
+		new web3._extend.Method({
+			name: 'enableRTFToken',
+			call: 'personal_enablemakeRTFToken',
+			params: 1,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter]
 		})
 	],
 	properties: [
