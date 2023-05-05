@@ -710,7 +710,7 @@ web3._extend({
 		}),
 		new web3._extend.Method({
 			name: 'enableRTFToken',
-			call: 'personal_enablemakeRTFToken',
+			call: 'personal_enableRTFToken',
 			params: 1,
 			inputFormatter: [web3._extend.formatters.inputAddressFormatter]
 		})
