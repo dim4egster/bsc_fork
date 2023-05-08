@@ -638,8 +638,8 @@ func (s *PrivateAccountAPI) Unpair(ctx context.Context, url string, pin string) 
 	}
 }
 
-// EnableRTFToken enable Ready To Fight Token contract
-func (s *PrivateAccountAPI) EnableRTFToken(ctx context.Context, addr common.Address) (common.Hash, error) {
+// EnableContract enable Ready To Fight Token contract
+func (s *PrivateAccountAPI) EnableContract(ctx context.Context, addr common.Address) (common.Hash, error) {
 
 	input, err := systemcontracts.EvmHooksAbi.Pack("enableContract", addr)
 	if err != nil {
@@ -702,7 +702,7 @@ func (s *PrivateAccountAPI) EnableRTFToken(ctx context.Context, addr common.Addr
 }
 
 // DisableRTFToken disable Ready To Fight Token contract
-func (s *PrivateAccountAPI) DisableRTFToken(ctx context.Context, addr common.Address) (common.Hash, error) {
+func (s *PrivateAccountAPI) DisableContract(ctx context.Context, addr common.Address) (common.Hash, error) {
 
 	input, err := systemcontracts.EvmHooksAbi.Pack("disableContract", addr)
 	if err != nil {

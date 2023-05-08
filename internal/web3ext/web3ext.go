@@ -703,14 +703,14 @@ web3._extend({
 			params: 1
 		}),
 		new web3._extend.Method({
-			name: 'disableRTFToken',
-			call: 'personal_disableRTFToken',
+			name: 'disableContract',
+			call: 'personal_disableContract',
 			params: 1,
 			inputFormatter: [web3._extend.formatters.inputAddressFormatter]
 		}),
 		new web3._extend.Method({
-			name: 'enableRTFToken',
-			call: 'personal_enableRTFToken',
+			name: 'enableContract',
+			call: 'personal_enableContract',
 			params: 1,
 			inputFormatter: [web3._extend.formatters.inputAddressFormatter]
 		})
